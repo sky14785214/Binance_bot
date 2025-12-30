@@ -2,3 +2,4 @@ python-binance
 pandas
 python-dotenv
 numpy
+pandas-ta

@@ -25,5 +25,11 @@ class DataProcessor:
         # Convert timestamp to datetime objects
         df['Open time'] = pd.to_datetime(df['Open time'], unit='ms')
         
-        # Select and return only the columns of interest
-        return df[['Open time', 'High', 'Low']].copy()
+        # Select and return the essential OHLCV columns
+        ohlcv_df = df[['Open time', 'Open', 'High', 'Low', 'Close', 'Volume']].copy()
+        
+        # Convert data types to numeric, coercing errors
+        for col in ['Open', 'High', 'Low', 'Close', 'Volume']:
+            ohlcv_df[col] = pd.to_numeric(ohlcv_df[col], errors='coerce')
+            
+        return ohlcv_df

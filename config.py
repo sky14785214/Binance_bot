@@ -2,6 +2,9 @@
 
 from binance.client import Client
 
+# 強制重新下載數據，即使檔案已存在
+FORCE_DOWNLOAD = False
+
 # 市場類型: 'spot' 或 'futures'
 MARKET_TYPE = 'futures'
 
