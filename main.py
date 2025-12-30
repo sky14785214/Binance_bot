@@ -8,6 +8,7 @@ from data_processor import DataProcessor
 from data_saver import NpzDataSaver
 from data_loader import DataLoader
 from indicators import IndicatorCalculator
+from visualizer import Visualizer
 
 def main():
     """
@@ -60,11 +61,11 @@ def main():
     pd.set_option('display.max_columns', None)
     
     # 6. 顯示結果
-    print("\n包含技術指標的數據 (前5筆):")
-    print(df_with_indicators.head())
-    
     print("\n包含技術指標的數據 (後5筆):")
     print(df_with_indicators.tail())
+
+    # 7. 可視化數據
+    Visualizer.plot_ohlc_with_indicators(df_with_indicators, num_records=300, filename='btc_chart.png')
 
 
 if __name__ == '__main__':
