@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import config
 from data_fetcher import BinanceDataFetcher
 from data_processor import DataProcessor
-from data_saver import CsvDataSaver
+from data_saver import NpzDataSaver
 
 def main():
     """
@@ -27,7 +27,7 @@ def main():
     # this could be handled by a dependency injection container.
     fetcher = BinanceDataFetcher()
     processor = DataProcessor()
-    saver = CsvDataSaver()
+    saver = NpzDataSaver()
 
     # 3. Execution flow
     # Fetch raw data
@@ -35,6 +35,9 @@ def main():
 
     # Process data
     if raw_klines:
+        # The raw klines now include more columns from the futures endpoint
+        # Let's update the processor to handle this if needed, for now we assume
+        # the first few columns are the same (timestamp, O, H, L, C, V)
         processed_data = processor.process_klines_to_dataframe(raw_klines)
         
         if not processed_data.empty:
