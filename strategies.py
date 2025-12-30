@@ -56,3 +56,47 @@ class MaCrossStrategy(Strategy):
         print("信號產生完畢。")
         return self.df
 
+class MaCrossStrategyWithTrendFilter(Strategy):
+    """
+    帶有長期趨勢過濾的移動平均線交叉策略。
+    - 買入條件:
+        1. 短期 MA > 長期 MA (黃金交叉)
+        2. 短期 MA > 趨勢過濾 MA (處於上升趨勢中)
+    - 賣出條件:
+        1. 短期 MA < 長期 MA (死亡交叉)
+    """
+    def __init__(self, data: pd.DataFrame, short_window: int = 10, long_window: int = 30, trend_window: int = 200):
+        super().__init__(data)
+        self.short_window_col = f'SMA_{short_window}'
+        self.long_window_col = f'SMA_{long_window}'
+        self.trend_window_col = f'SMA_{trend_window}'
+
+    def generate_signals(self) -> pd.DataFrame:
+        """
+        產生帶有趨勢過濾的 MA 交叉策略信號。
+        """
+        print("正在產生帶趨勢過濾的 MA 交叉策略信號...")
+        
+        required_cols = [self.short_window_col, self.long_window_col, self.trend_window_col]
+        if not all(col in self.df.columns for col in required_cols):
+            raise ValueError(f"數據中缺少 MA 欄位: {required_cols}")
+
+        self.df['signal'] = 0
+        
+        # 條件 1: 短期MA > 中期MA
+        condition1 = self.df[self.short_window_col] > self.df[self.long_window_col]
+        # 條件 2: 中期MA > 長期趨勢MA
+        condition2 = self.df[self.long_window_col] > self.df[self.trend_window_col]
+        
+        # 當兩個條件都滿足時，我們希望處於持有多頭部位 (position = 1)
+        self.df['position'] = 0
+        self.df.loc[condition1 & condition2, 'position'] = 1
+
+        # 計算 position 的變化來決定實際的買賣點
+        self.df['signal'] = self.df['position'].diff()
+        
+        self.df.drop(columns=['position'], inplace=True)
+        
+        print("帶趨勢過濾的信號產生完畢。")
+        return self.df
+

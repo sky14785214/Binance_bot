@@ -17,8 +17,9 @@ class IndicatorCalculator:
         print("開始計算技術指標 (MA, RSI, KD)...")
         
         # 計算移動平均線 (MA)
-        df.ta.sma(length=10, append=True)  # 10日簡單移動平均線
-        df.ta.sma(length=30, append=True)  # 30日簡單移動平均線
+        df.ta.sma(length=10, append=True)  # 短期
+        df.ta.sma(length=30, append=True)  # 中期
+        df.ta.sma(length=200, append=True) # 長期趨勢濾網
 
         # 計算相對強弱指數 (RSI)
         df.ta.rsi(length=14, append=True) # 14日RSI

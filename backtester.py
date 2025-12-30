@@ -49,17 +49,38 @@ class Backtester:
         for i in range(1, len(self.data)):
             # 先繼承前一天的狀態
             cash.iloc[i] = cash.iloc[i-1]
-            holdings.iloc[i] = holdings.iloc[i-1] * (self.data['close'].iloc[i] / self.data['close'].iloc[i-1])
+            holdings.iloc[i] = holdings.iloc[i-1]
+            # 更新持倉價值
+            if self.data['close'].iloc[i-1] != 0: # 避免除以零
+                holdings.iloc[i] *= (self.data['close'].iloc[i] / self.data['close'].iloc[i-1])
 
-            if trades.iloc[i] == 1:  # 買入
-                buy_price = self.data['close'].iloc[i]
-                quantity = (cash.iloc[i] * (1 - self.commission)) / buy_price
-                holdings.iloc[i] = quantity * buy_price
-                cash.iloc[i] = 0
-            elif trades.iloc[i] == -1:  # 賣出
-                sell_price = self.data['close'].iloc[i]
-                cash.iloc[i] += holdings.iloc[i] * (1 - self.commission)
-                holdings.iloc[i] = 0
+            current_signal = trades.iloc[i]
+            current_price = self.data['close'].iloc[i]
+
+            # 驗證測試專用：打印交易日誌
+            if abs(current_signal) > 0: # 如果有交易信號
+                print(f"\n[交易日誌 @ {self.data.index[i]}] 信號: {'買入' if current_signal > 0 else '賣出'} @ {current_price:,.2f}")
+                print(f"  > 買賣前: 現金 {cash.iloc[i]:,.2f}, 持倉價值 {holdings.iloc[i]:,.2f}")
+            
+            if current_signal > 0:  # 買入
+                if cash.iloc[i] > 0: # 只有當有現金時才買入
+                    quantity = (cash.iloc[i] * (1 - self.commission)) / current_price
+                    holdings.iloc[i] += quantity * current_price # 增加持倉價值
+                    cash.iloc[i] = 0 # 現金歸零
+                    if abs(current_signal) > 0: print(f"  > 執行買入。買入後: 現金 {cash.iloc[i]:,.2f}, 持倉價值 {holdings.iloc[i]:,.2f}")
+                else:
+                    # 沒有現金時無法買入，將信號設為0
+                    current_signal = 0 
+                    if abs(current_signal) > 0: print(f"  > 沒有現金，無法買入。")
+            elif current_signal < 0:  # 賣出
+                if holdings.iloc[i] > 0: # 只有當有持倉時才賣出
+                    cash.iloc[i] += holdings.iloc[i] * (1 - self.commission) # 增加現金
+                    holdings.iloc[i] = 0 # 持倉歸零
+                    if abs(current_signal) > 0: print(f"  > 執行賣出。賣出後: 現金 {cash.iloc[i]:,.2f}, 持倉價值 {holdings.iloc[i]:,.2f}")
+                else:
+                    # 沒有持倉時無法賣出，將信號設為0
+                    current_signal = 0
+                    if abs(current_signal) > 0: print(f"  > 沒有持倉，無法賣出。")
 
         # 計算總資產
         portfolio_value = cash + holdings
