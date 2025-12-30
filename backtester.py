@@ -94,31 +94,39 @@ class Backtester:
         })
         
         print("回測執行完畢。")
-        self._print_summary(portfolio_value)
+        summary = self._get_summary_dict(portfolio_value)
+        self._print_summary(summary)
         
-        return self.results
+        return self.results, summary
 
-    def _print_summary(self, portfolio_value: pd.Series):
-        """
-        打印回測的績效摘要。
-        """
-        print("\n--- 回測績效摘要 ---")
-        
+    def _get_summary_dict(self, portfolio_value: pd.Series) -> dict:
+        """計算並回傳一個包含績效指標的字典。"""
         start_value = self.initial_cash
         end_value = portfolio_value.iloc[-1]
-        total_return = (end_value - start_value) / start_value * 100
         
-        buy_and_hold_return = (self.data['close'].iloc[-1] - self.data['close'].iloc[0]) / self.data['close'].iloc[0] * 100
+        total_return_pct = (end_value - start_value) / start_value * 100
+        
+        buy_and_hold_return_pct = (self.data['close'].iloc[-1] - self.data['close'].iloc[0]) / self.data['close'].iloc[0] * 100
         
         num_trades = (self.results['trades'] != 0).sum()
 
-        print(f"初始資產: {start_value:,.2f}")
-        print(f"最終資產: {end_value:,.2f}")
-        print(f"總報酬率: {total_return:.2f}%")
-        print(f"買入並持有策略報酬率: {buy_and_hold_return:.2f}%")
-        print(f"總交易次數: {num_trades}")
+        summary = {
+            "Initial Portfolio": f"{start_value:,.2f}",
+            "Final Portfolio": f"{end_value:,.2f}",
+            "Total Return (%)": f"{total_return_pct:.2f}",
+            "Buy & Hold Return (%)": f"{buy_and_hold_return_pct:.2f}",
+            "Total Trades": num_trades,
+        }
+        return summary
+
+    def _print_summary(self, summary: dict):
+        """打印回測的績效摘要。"""
+        print("\n--- 回測績效摘要 ---")
+        for key, value in summary.items():
+            print(f"{key}: {value}")
         
-        if total_return > buy_and_hold_return:
-            print("策略表現優於買入並持有。 இருப்பதாக")
+        # 比較策略與買入持有
+        if float(summary["Total Return (%)"]) > float(summary["Buy & Hold Return (%)"]):
+            print("策略表現優於買入並持有。")
         else:
-            print("策略表現劣於買入並持有。 இருப்பதாக")
+            print("策略表現劣於買入並持有。")
